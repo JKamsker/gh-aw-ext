@@ -54,6 +54,10 @@ class PatcherTests(unittest.TestCase):
             self.assertIn("Patch gh-aw OpenAI proxy target from CODEX_LB_BASE_URL", text)
             self.assertIn("--exclude-env CODEX_LB_BASE_URL", text)
             self.assertIn("CODEX_LB_BASE_URL: ${{ secrets.CODEX_LB_BASE_URL }}", text)
+            self.assertIn("Codex endpoint /v1/models preflight passed", text)
+            self.assertIn("the endpoint must answer model-list probes locally before Codex runs", text)
+            self.assertIn('if base_path == "/openai/v1":', text)
+            self.assertIn('base_path = "/backend-api/codex"', text)
             self.assertIn('model_reasoning_effort = "high"', text)
             self.assertIn("python3 - <<'PY'", text)
             self.assertNotIn("redact_codex_endpoint_artifacts.py", text)
@@ -85,7 +89,34 @@ class PatcherTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             self.assertIn("PRIVATE_OPENAI_BASE_URL: ${{ secrets.PRIVATE_OPENAI_BASE_URL }}", text)
             self.assertIn("--exclude-env PRIVATE_OPENAI_BASE_URL", text)
+            self.assertIn("PRIVATE_OPENAI_BASE_URL preflight failed", text)
             self.assertNotIn("model_reasoning_effort", text)
+
+    def test_models_preflight_can_be_disabled(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "workflow.lock.yml"
+            path.write_text(SAMPLE_LOCKFILE, encoding="utf-8")
+
+            patch_lockfile(path, PatchOptions(models_preflight=False))
+
+            text = path.read_text(encoding="utf-8")
+            self.assertNotIn("Codex endpoint /v1/models preflight passed", text)
+            self.assertNotIn("request.urlopen", text)
+
+    def test_existing_endpoint_patch_is_upgraded_with_models_preflight(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "workflow.lock.yml"
+            path.write_text(SAMPLE_LOCKFILE, encoding="utf-8")
+
+            first = patch_lockfile(path, PatchOptions(models_preflight=False))
+            second = patch_lockfile(path)
+            third = patch_lockfile(path)
+
+            self.assertTrue(first.changed)
+            self.assertTrue(second.changed)
+            self.assertFalse(third.changed)
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("Codex endpoint /v1/models preflight passed", text)
 
 
 if __name__ == "__main__":

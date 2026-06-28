@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 
-def endpoint_patch_lines(secret_name: str) -> list[str]:
-    return [
+def endpoint_patch_lines(secret_name: str, *, models_preflight: bool = True) -> list[str]:
+    lines = [
         f"# Patch gh-aw OpenAI proxy target from {secret_name}.",
         "python3 - <<'PY'",
         "import json",
@@ -17,6 +17,8 @@ def endpoint_patch_lines(secret_name: str) -> list[str]:
         "host = parsed.hostname",
         "target_host = parsed.netloc",
         'base_path = parsed.path.rstrip("/")',
+        'if base_path == "/openai/v1":',
+        '    base_path = "/backend-api/codex"',
         'print(f"::add-mask::{endpoint}")',
         'print(f"::add-mask::{host}")',
         'print(f"::add-mask::{target_host}")',
@@ -31,8 +33,41 @@ def endpoint_patch_lines(secret_name: str) -> list[str]:
         '    openai_target["basePath"] = base_path',
         "else:",
         '    openai_target.pop("basePath", None)',
-        'config_path.write_text(json.dumps(config, separators=(",", ":"), ensure_ascii=False) + "\\n")',
-        "PY",
+    ]
+    if models_preflight:
+        lines.extend(models_preflight_lines(secret_name))
+    lines.extend(
+        [
+            'config_path.write_text(json.dumps(config, separators=(",", ":"), ensure_ascii=False) + "\\n")',
+            "PY",
+        ]
+    )
+    return lines
+
+
+def models_preflight_lines(secret_name: str) -> list[str]:
+    return [
+        "# Verify the endpoint handles gh-aw model-list probes before starting AWF.",
+        "from urllib import error, request",
+        'api_key = os.environ.get("CODEX_API_KEY") or os.environ.get("OPENAI_API_KEY")',
+        "if not api_key:",
+        '    raise SystemExit("CODEX_API_KEY or OPENAI_API_KEY is required for Codex endpoint preflight")',
+        'models_url = f"{parsed.scheme}://{target_host}{base_path}/v1/models"',
+        'preflight = request.Request(models_url, headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"})',
+        "try:",
+        "    with request.urlopen(preflight, timeout=20) as response:",
+        "        response_body = response.read(65536)",
+        "except error.HTTPError as exc:",
+        f'    raise SystemExit("{secret_name} preflight failed: /v1/models returned HTTP " + str(exc.code) + "; the endpoint must answer model-list probes locally before Codex runs") from None',
+        "except Exception as exc:",
+        f'    raise SystemExit("{secret_name} preflight failed before Codex could run (" + type(exc).__name__ + "); check endpoint reachability and TLS without printing the secret URL") from None',
+        "try:",
+        '    models_payload = json.loads(response_body.decode("utf-8"))',
+        "except Exception:",
+        f'    raise SystemExit("{secret_name} preflight failed: /v1/models returned non-JSON content") from None',
+        "if not isinstance(models_payload, dict):",
+        f'    raise SystemExit("{secret_name} preflight failed: /v1/models returned an unexpected JSON shape")',
+        'print("Codex endpoint /v1/models preflight passed")',
     ]
 
 

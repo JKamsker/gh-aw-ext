@@ -36,6 +36,7 @@ def add_patch_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--no-reasoning-effort", action="store_true")
     parser.add_argument("--no-agent-redaction", action="store_true")
     parser.add_argument("--no-detection-redaction", action="store_true")
+    parser.add_argument("--no-models-preflight", action="store_true")
 
 
 def build_patch_options(namespace: argparse.Namespace) -> PatchOptions:
@@ -44,6 +45,7 @@ def build_patch_options(namespace: argparse.Namespace) -> PatchOptions:
         reasoning_effort=None if namespace.no_reasoning_effort else namespace.reasoning_effort,
         agent_redaction=not namespace.no_agent_redaction,
         detection_redaction=not namespace.no_detection_redaction,
+        models_preflight=not namespace.no_models_preflight,
     )
 
 

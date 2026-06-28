@@ -25,6 +25,7 @@ class PatchOptions:
     reasoning_effort: str | None = "high"
     agent_redaction: bool = True
     detection_redaction: bool = True
+    models_preflight: bool = True
 
     def validate(self) -> None:
         if not re.fullmatch(r"[A-Z_][A-Z0-9_]*", self.secret_name):
@@ -52,7 +53,12 @@ def patch_lockfile(path: Path, options: PatchOptions = PatchOptions()) -> PatchR
 
     lines = text.splitlines()
     lines, manifest_changed = ensure_manifest_secret(lines, options.secret_name)
-    lines, endpoint_count = insert_runtime_patch(lines, options.secret_name)
+    lines, endpoint_replace_count = replace_runtime_patches(
+        lines,
+        options.secret_name,
+        options.models_preflight,
+    )
+    lines, endpoint_count = insert_runtime_patch(lines, options.secret_name, options.models_preflight)
     lines, awf_count = patch_awf_commands(lines, options.secret_name)
     lines, env_count = insert_endpoint_env(lines, options.secret_name)
     lines, reasoning_count = insert_codex_reasoning_effort(lines, options.reasoning_effort)
@@ -70,7 +76,7 @@ def patch_lockfile(path: Path, options: PatchOptions = PatchOptions()) -> PatchR
     return PatchResult(
         path=path,
         changed=changed,
-        endpoint_snippets=endpoint_count,
+        endpoint_snippets=endpoint_count + endpoint_replace_count,
         awf_commands=awf_count,
         env_blocks=env_count,
         reasoning_blocks=reasoning_count,
@@ -113,7 +119,34 @@ def ensure_manifest_secret(lines: list[str], secret_name: str) -> tuple[list[str
     return patched, changed
 
 
-def insert_runtime_patch(lines: list[str], secret_name: str) -> tuple[list[str], int]:
+def replace_runtime_patches(lines: list[str], secret_name: str, models_preflight: bool) -> tuple[list[str], int]:
+    patched: list[str] = []
+    replacements = 0
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if PATCH_MARKER_PREFIX not in line:
+            patched.append(line)
+            index += 1
+            continue
+
+        indent = line[: len(line) - len(line.lstrip())]
+        patched.extend(
+            f"{indent}{snippet_line}" if snippet_line else ""
+            for snippet_line in endpoint_patch_lines(secret_name, models_preflight=models_preflight)
+        )
+        replacements += 1
+        index += 1
+        while index < len(lines):
+            if lines[index].strip() == "PY":
+                index += 1
+                break
+            index += 1
+
+    return patched, replacements
+
+
+def insert_runtime_patch(lines: list[str], secret_name: str, models_preflight: bool) -> tuple[list[str], int]:
     patched: list[str] = []
     insertions = 0
     for index, line in enumerate(lines):
@@ -125,7 +158,10 @@ def insert_runtime_patch(lines: list[str], secret_name: str) -> tuple[list[str],
             continue
 
         indent = line[: len(line) - len(line.lstrip())]
-        patched.extend(f"{indent}{snippet_line}" if snippet_line else "" for snippet_line in endpoint_patch_lines(secret_name))
+        patched.extend(
+            f"{indent}{snippet_line}" if snippet_line else ""
+            for snippet_line in endpoint_patch_lines(secret_name, models_preflight=models_preflight)
+        )
         insertions += 1
     return patched, insertions
 
