@@ -31,7 +31,7 @@ runs:
       run: |
         set -euo pipefail
         export PYTHONPATH="${GITHUB_ACTION_PATH}/../../src${PYTHONPATH:+:${PYTHONPATH}}"
-        command=(python3 -m gh_aw_priv dispatch-repair)
+        command=(python3 -m gh_aw_ext dispatch-repair)
         while IFS= read -r step; do
           if [ -n "$step" ]; then
             command+=(--validation-step "$step")

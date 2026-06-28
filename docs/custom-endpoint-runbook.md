@@ -1,9 +1,9 @@
 # gh-aw Custom Endpoint Runbook
 
-Use `gh-aw-priv compile` for Codex gh-aw workflows that must route through a private OpenAI-compatible endpoint.
+Use `gh-aw-ext compile` for Codex gh-aw workflows that must route through a private OpenAI-compatible endpoint.
 
 ```powershell
-gh-aw-priv compile .github/workflows/daily-repo-status.md
+gh-aw-ext compile .github/workflows/daily-repo-status.md
 ```
 
 The wrapper runs `gh aw compile` first, then patches the generated `.lock.yml` file.
@@ -23,7 +23,7 @@ The endpoint host and full URL are treated as secret. The secret name is safe to
 ## Recommended Workflow
 
 1. Edit `.github/workflows/<name>.md`.
-2. Run `gh-aw-priv compile .github/workflows/<name>.md`.
+2. Run `gh-aw-ext compile .github/workflows/<name>.md`.
 3. Run `gh aw validate .github/workflows/<name>.md --no-check-update --stats`.
 4. Review the generated `.lock.yml` diff.
 5. Commit both the source markdown and lockfile.

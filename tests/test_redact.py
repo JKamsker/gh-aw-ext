@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from gh_aw_priv.redact import redact_from_environment
+from gh_aw_ext.redact import redact_from_environment
 
 
 class RedactTests(unittest.TestCase):

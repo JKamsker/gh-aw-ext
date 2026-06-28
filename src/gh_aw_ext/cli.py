@@ -13,7 +13,7 @@ from .repair import DEFAULT_VALIDATION_STEP_NAMES, run_from_environment
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     if not args:
-        print("usage: gh-aw-priv <compile|patch-lockfiles|redact-artifacts|dispatch-repair> ...", file=sys.stderr)
+        print("usage: gh-aw-ext <compile|patch-lockfiles|redact-artifacts|dispatch-repair> ...", file=sys.stderr)
         return 2
 
     command = args.pop(0)
@@ -48,14 +48,14 @@ def build_patch_options(namespace: argparse.Namespace) -> PatchOptions:
 
 
 def compile_command(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="gh-aw-priv compile")
+    parser = argparse.ArgumentParser(prog="gh-aw-ext compile")
     add_patch_options(parser)
     namespace, gh_aw_args = parser.parse_known_args(argv)
     return compile_and_patch(gh_aw_args, build_patch_options(namespace))
 
 
 def patch_lockfiles_command(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="gh-aw-priv patch-lockfiles")
+    parser = argparse.ArgumentParser(prog="gh-aw-ext patch-lockfiles")
     add_patch_options(parser)
     parser.add_argument("paths", nargs="*")
     namespace = parser.parse_args(argv)
@@ -65,7 +65,7 @@ def patch_lockfiles_command(argv: list[str]) -> int:
 
 
 def redact_artifacts_command(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="gh-aw-priv redact-artifacts")
+    parser = argparse.ArgumentParser(prog="gh-aw-ext redact-artifacts")
     parser.add_argument("--secret-name", default="CODEX_LB_BASE_URL")
     parser.add_argument("paths", nargs="*")
     namespace = parser.parse_args(argv)
@@ -75,7 +75,7 @@ def redact_artifacts_command(argv: list[str]) -> int:
 
 
 def dispatch_repair_command(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="gh-aw-priv dispatch-repair")
+    parser = argparse.ArgumentParser(prog="gh-aw-ext dispatch-repair")
     parser.add_argument("--source-run-id")
     parser.add_argument("--repo")
     parser.add_argument("--default-branch")

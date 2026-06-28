@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from gh_aw_priv.compile import selected_lockfiles
+from gh_aw_ext.compile import selected_lockfiles
 
 
 class CompileSelectionTests(unittest.TestCase):

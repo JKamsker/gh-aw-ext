@@ -33,7 +33,7 @@ runs:
         command = [
             sys.executable,
             "-m",
-            "gh_aw_priv",
+            "gh_aw_ext",
             "patch-lockfiles",
             "--secret-name",
             os.environ["INPUT_SECRET_NAME"],

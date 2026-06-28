@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from gh_aw_priv.patcher import PatchOptions, patch_lockfile
+from gh_aw_ext.patcher import PatchOptions, patch_lockfile
 
 
 SAMPLE_LOCKFILE = """# gh-aw-manifest: {"version":1,"secrets":["CODEX_API_KEY"]}

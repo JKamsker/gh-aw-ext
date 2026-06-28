@@ -26,7 +26,7 @@ safe-outputs:
     labels: [report, daily-status]
     close-older-issues: true
 
-# Compile with `gh-aw-priv compile .github/workflows/daily-repo-status.md`.
+# Compile with `gh-aw-ext compile .github/workflows/daily-repo-status.md`.
 # The wrapper patches the generated lockfile to read CODEX_LB_BASE_URL at runtime.
 engine: codex
 

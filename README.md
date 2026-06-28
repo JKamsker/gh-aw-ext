@@ -1,6 +1,6 @@
-# gh-aw-priv
+# gh-aw-ext
 
-Reusable helpers for private `gh-aw` Codex workflows.
+Reusable extension helpers for `gh-aw` Codex workflows.
 
 The extracted workflow glue does three things:
 
@@ -21,13 +21,13 @@ python -m pip install -e .
 Compile a gh-aw workflow from another repo:
 
 ```powershell
-gh-aw-priv compile .github/workflows/daily-repo-status.md
+gh-aw-ext compile .github/workflows/daily-repo-status.md
 ```
 
 Patch existing lockfiles without compiling:
 
 ```powershell
-gh-aw-priv patch-lockfiles .github/workflows/daily-repo-status.lock.yml
+gh-aw-ext patch-lockfiles .github/workflows/daily-repo-status.lock.yml
 ```
 
 Validate as usual after compiling:

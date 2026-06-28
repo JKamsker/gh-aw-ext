@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: JKamsker/gh-aw-priv/actions/dispatch-repair@v1
+      - uses: JKamsker/gh-aw-ext/actions/dispatch-repair@v1
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           source-run-id: ${{ github.event.workflow_run.id }}
