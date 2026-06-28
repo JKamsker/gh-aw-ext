@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gh-aw-priv"
+version = "0.1.0"
+description = "Private gh-aw helpers for Codex workflows with secret-backed endpoints."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+gh-aw-priv = "gh_aw_priv.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,21 @@
+name: Validate gh-aw lockfiles
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/*.md"
+      - ".github/workflows/*.lock.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: JKamsker/gh-aw-priv/actions/patch-lockfiles@v1
+
+      - name: Ensure lockfiles are already patched
+        run: git diff --exit-code -- .github/workflows

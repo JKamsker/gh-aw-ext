@@ -1,0 +1,31 @@
+name: Redact gh-aw Codex artifacts
+description: Redact a secret-backed Codex endpoint from artifact directories.
+inputs:
+  paths:
+    description: Newline-separated paths to redact. Defaults to /tmp/gh-aw.
+    required: false
+    default: ""
+  secret-name:
+    description: Environment variable containing the endpoint base URL.
+    required: false
+    default: CODEX_LB_BASE_URL
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        INPUT_PATHS: ${{ inputs.paths }}
+        INPUT_SECRET_NAME: ${{ inputs.secret-name }}
+      run: |
+        set -euo pipefail
+        export PYTHONPATH="${GITHUB_ACTION_PATH}/../../src${PYTHONPATH:+:${PYTHONPATH}}"
+        python3 - <<'PY'
+        import os
+        import subprocess
+        import sys
+
+        paths = [line.strip() for line in os.environ.get("INPUT_PATHS", "").splitlines() if line.strip()]
+        command = [sys.executable, "-m", "gh_aw_priv", "redact-artifacts", "--secret-name", os.environ["INPUT_SECRET_NAME"]]
+        command.extend(paths)
+        subprocess.run(command, check=True)
+        PY

@@ -1,0 +1,24 @@
+name: Example gh-aw Repair Dispatch
+
+on:
+  workflow_run:
+    workflows: ["Codex SDK Parity Pass"]
+    types: [completed]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch-repair:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: JKamsker/gh-aw-priv/actions/dispatch-repair@v1
+        with:
+          github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          source-run-id: ${{ github.event.workflow_run.id }}
+          workflow-file: codex-sdk-parity-pass.lock.yml
+          max-attempts: "3"

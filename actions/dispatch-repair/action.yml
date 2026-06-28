@@ -1,0 +1,40 @@
+name: Dispatch gh-aw repair
+description: Dispatch a bounded repair workflow after a validation-gate failure.
+inputs:
+  github-token:
+    description: Token with actions:write permission.
+    required: true
+  source-run-id:
+    description: Failed workflow run id.
+    required: true
+  workflow-file:
+    description: Workflow file to dispatch.
+    required: true
+  max-attempts:
+    description: Maximum repair attempts.
+    required: false
+    default: "3"
+  validation-steps:
+    description: Optional newline-separated validation step names.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        SOURCE_RUN_ID: ${{ inputs.source-run-id }}
+        PARITY_WORKFLOW_FILE: ${{ inputs.workflow-file }}
+        MAX_REPAIR_ATTEMPTS: ${{ inputs.max-attempts }}
+        INPUT_VALIDATION_STEPS: ${{ inputs.validation-steps }}
+      run: |
+        set -euo pipefail
+        export PYTHONPATH="${GITHUB_ACTION_PATH}/../../src${PYTHONPATH:+:${PYTHONPATH}}"
+        command=(python3 -m gh_aw_priv dispatch-repair)
+        while IFS= read -r step; do
+          if [ -n "$step" ]; then
+            command+=(--validation-step "$step")
+          fi
+        done <<< "$INPUT_VALIDATION_STEPS"
+        "${command[@]}"
